@@ -147,32 +147,6 @@ if ($PID_FILE && -r $PID_FILE) {
 run_as_server();
 exit(0);
 
-sub _fork {
-    my $pid = fork;
-    if (!defined($pid)) { die "Cannot fork: $!" }
-    return $pid if $pid;
-
-    # Fixup Net::DNS randomness after fork
-    srand($$ ^ time);
-    
-    local $^W;
-    delete $INC{'Net/DNS/Header.pm'};
-    require Net::DNS::Header;
-    
-    # cope with different versions of Net::DNS
-    eval {
-        $Net::DNS::Resolver::global{id} = 1;
-        $Net::DNS::Resolver::global{id} = int(rand(Net::DNS::Resolver::MAX_ID()));
-        # print "Next DNS ID: $Net::DNS::Resolver::global{id}\n";
-    };
-    if ($@) {
-        # print "Next DNS ID: " . Net::DNS::Header::nextid() . "\n";
-    }
-    
-    # Fixup lost kqueue after fork
-    $Danga::Socket::HaveKQueue = undef;
-}
-
 # Note this is broken on KQueue because it requires that it handle signals itself or it breaks the event loop.
 my $SHUTDOWN_STARTED;
 sub SHUTDOWN {
