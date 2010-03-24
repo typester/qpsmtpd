@@ -185,6 +185,7 @@ sub SHUTDOWN {
     };
     Danga::Socket->AddTimer(0, $wait);
 
+    # qpsmtpd doesn't handle EAGAIN on read. so adhoc fix this for graceful shutdown.
     *Qpsmtpd::PollServer::event_err = sub {
         return if $! == Errno::EAGAIN;
         shift->SUPER::event_err(@_);
